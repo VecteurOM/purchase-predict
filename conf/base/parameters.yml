@@ -1,0 +1,4 @@
+test_ratio: 0.3
+automl_max_evals: 10
+gcp_project_id: "project-7c818ee0-8f39-47d7-85d"
+gcs_primary_folder: "example-mlops/primary.csv"
