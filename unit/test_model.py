@@ -2,17 +2,16 @@ import os
 import joblib
 import numpy as np
 import pandas as pd
-
+import pytest
 from sklearn.cluster import KMeans
 
-# Chemins vers les fichiers du notebook 4/5
 BASE = os.path.join(os.path.dirname(__file__), "..", "data", "05_model_input")
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "06_models", "model.pkl")
+MODEL_EXISTS = os.path.exists(MODEL_PATH)
 
 
 def load_data():
     raw = joblib.load(MODEL_PATH)
-    # auto_ml retourne un dict — on extrait le vrai modèle
     if isinstance(raw, dict):
         model = raw.get("model") or raw.get("best_model") or list(raw.values())[0]
     else:
@@ -22,18 +21,16 @@ def load_data():
     return model, X_test, y_test
 
 
+@pytest.mark.skipif(not MODEL_EXISTS, reason="model.pkl not available in CI")
 def test_invariance_price():
-    """Test d'invariance : une variation de ±1 sur le prix ne doit pas
-    changer la probabilité de plus de 30% en moyenne."""
     model, X_test, _ = load_data()
     if "price" not in X_test.columns:
-        return  # skip si pas de colonne price
+        return
     X_price = X_test[X_test["price"] > 1].copy()
     X_plus = X_price.copy()
     X_plus["price"] = X_plus["price"] + 1
     X_minus = X_price.copy()
     X_minus["price"] = X_minus["price"] - 1
-    model.predict_proba(X_price)[:, 1]
     y_plus = model.predict_proba(X_plus)[:, 1]
     y_minus = model.predict_proba(X_minus)[:, 1]
     abs_delta = np.abs(y_plus - y_minus)
@@ -41,9 +38,8 @@ def test_invariance_price():
     assert mean_delta < 0.30, f"Variation moyenne trop élevée : {mean_delta:.3f}"
 
 
+@pytest.mark.skipif(not MODEL_EXISTS, reason="model.pkl not available in CI")
 def test_directional_duration():
-    """Test directionnel : augmenter la durée doit augmenter ou maintenir
-    la probabilité d'achat en moyenne."""
     model, X_test, _ = load_data()
     if "duration" not in X_test.columns:
         return
@@ -56,9 +52,8 @@ def test_directional_duration():
     )
 
 
+@pytest.mark.skipif(not MODEL_EXISTS, reason="model.pkl not available in CI")
 def test_prototypes():
-    """Test unitaire du modèle : les prototypes (centres de clusters)
-    doivent recevoir une prédiction cohérente."""
     model, X_test, _ = load_data()
     kmeans = KMeans(n_clusters=5, random_state=42, n_init=10)
     kmeans.fit(X_test)
