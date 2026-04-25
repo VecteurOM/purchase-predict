@@ -1,4 +1,7 @@
 test_ratio: 0.3
-automl_max_evals: 10
+automl_max_evals: 1      # mettre 1 pour les tests, 10-40 pour la prod
 gcp_project_id: "project-7c818ee0-8f39-47d7-85d"
 gcs_primary_folder: "example-mlops/primary.csv"
+mlflow_enabled: True
+mlflow_experiment_id: 1
+mlflow_model_registry: "purchase_predict"
